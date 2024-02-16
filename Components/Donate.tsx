@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,54 +8,55 @@ import {
   ImageBackground,
   Button,
   Image,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import { Formik } from "formik";
 import { Card } from "react-native-paper"; // Import Card from react-native-paper
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
-import * as Location from 'expo-location'
+import * as Location from "expo-location";
 import { KindeSDK } from "@kinde-oss/react-native-sdk-0-7x";
 
 export default function Donate() {
   const list = {
-    KINDE_ISSUER_URL:'https://sudhan123.kinde.com',
-KINDE_POST_CALLBACK_URL : 'exp://192.168.136.4:8081',
-KINDE_POST_LOGOUT_REDIRECT_URL : 'exp://192.168.136.4:8081',
-KINDE_CLIENT_ID:'06eea6fe24074922ba63b79d9133ce88',
-};
-  const client = new KindeSDK(list.KINDE_ISSUER_URL, list.KINDE_POST_CALLBACK_URL, list.KINDE_CLIENT_ID, list.KINDE_POST_LOGOUT_REDIRECT_URL);
-  const [location,setLocation]=useState();
+    KINDE_ISSUER_URL: "https://sudhan123.kinde.com",
+    KINDE_POST_CALLBACK_URL: "exp://192.168.110.4:8081",
+    KINDE_POST_LOGOUT_REDIRECT_URL: "exp://192.168.110.4:8081",
+    KINDE_CLIENT_ID: "06eea6fe24074922ba63b79d9133ce88",
+  };
+  const client = new KindeSDK(
+    list.KINDE_ISSUER_URL,
+    list.KINDE_POST_CALLBACK_URL,
+    list.KINDE_CLIENT_ID,
+    list.KINDE_POST_LOGOUT_REDIRECT_URL
+  );
+  const [location, setLocation] = useState();
   const [address, setAddress] = useState();
-  Location.setGoogleApiKey("");
-  useEffect(()=>{
-    const getPermissions = async () =>{
-      let {status} = await Location.requestForegroundPermissionsAsync();
-      if(status !== 'granted'){
-        console.log('Please grant location permissions')
+  Location.setGoogleApiKey("AIzaSyD5GUOMMrDY5Ml8JOQ5j7z7p9f8GaGCDBg");
+  useEffect(() => {
+    const getPermissions = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.log("Please grant location permissions");
         return;
       }
       var currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
       console.log(currentLocation);
-      console.log(location)
-      
-    }
+      console.log(location);
+    };
     getPermissions();
-  },[])
+  }, []);
 
   const reverseGeocode = async () => {
     const reverseGeocodedAddress = await Location.reverseGeocodeAsync({
       longitude: location.coords.longitude,
-      latitude: location.coords.latitude
+      latitude: location.coords.latitude,
     });
 
     console.log("Reverse Geocoded:");
-    console.log(reverseGeocodedAddress);  //Address
+    console.log(reverseGeocodedAddress); //Address
   };
-
-  
-
 
   const [images, setImages] = useState([]);
 
@@ -86,7 +87,7 @@ KINDE_CLIENT_ID:'06eea6fe24074922ba63b79d9133ce88',
       to: newImageUri,
     });
 
-    console.log("Image saved to: ", newImageUri);  //Images
+    console.log("Image saved to: ", newImageUri); //Images
   };
 
   const removeImageFromDirectory = async (index) => {
@@ -99,119 +100,129 @@ KINDE_CLIENT_ID:'06eea6fe24074922ba63b79d9133ce88',
     }
   };
 
-  const geocode = async() => {
+  const geocode = async () => {
     const geoCodedLocation = await Location.geocodeAsync(address);
-    console.log("Geocoded Address : ")
-    console.log(geoCodedLocation)
-  }
-  
+    console.log("Geocoded Address : ");
+    console.log(geoCodedLocation);
+  };
+
   return (
     <ImageBackground
       source={require("./../assets/bg-food.jpg")}
       style={styles.backgroundImage}
     >
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        
         <Card style={styles.card1}>
-        <ImageBackground
-            source={require('./../assets/grad.avif')}
-            
-          >
-          
+          <ImageBackground source={require("./../assets/grad.avif")}>
             <Text style={styles.heading}>Food Donation Platform</Text>
             <Text style={styles.slogan}>
               "Be a Food Hero: Donate Today, Transform Lives"
             </Text>
-            </ImageBackground>
+          </ImageBackground>
         </Card>
         <Card style={styles.card2}>
           <ImageBackground
-            source={require('./../assets/grad.avif')}
-            style={{overflow:'hidden'}}
+            source={require("./../assets/grad.avif")}
+            style={{ overflow: "hidden" }}
           >
-          <Formik
-            initialValues={{
-              description: "",
-              foodQuantity: "",
-              location: "",
-              contactNumber: "",
-            }}
-            onSubmit={(values) => console.log(values)}   //values
-          >
-            {({ handleChange, handleBlur, handleSubmit, values }) => (
-              <View style={styles.container}>
-                <TextInput
-                  style={styles.input}
-                  onChangeText={handleChange("description")}
-                  onBlur={handleBlur("description")}
-                  value={values.description}
-                  placeholder="Food Description"
-                />
-                <TextInput
-                  style={styles.input}
-                  onChangeText={handleChange("foodQuantity")}
-                  onBlur={handleBlur("foodQuantity")}
-                  value={values.foodQuantity}
-                  placeholder="Approx Food Quantity"
-                />
-                <TextInput
-                  style={styles.input}
-                  onChangeText={handleChange("location")}
-                  onBlur={handleBlur("location")}
-                  value={values.location}
-                  placeholder="Location"
-                />
-                <TextInput
-                  style={styles.input}
-                  onChangeText={handleChange("contactNumber")}
-                  onBlur={handleBlur("contactNumber")}
-                  value={values.contactNumber}
-                  placeholder="Contact Number"
-                  keyboardType="phone-pad"
-                />
-                <View style={styles.locationContainer}>
-        <Text style={styles.locationText}>Latitude: {location ? location.coords.latitude : ''}</Text>
-        <Text style={styles.locationText}>Longitude: {location ? location.coords.longitude : ''}</Text>
-      </View>
-                <View
-                  style={{
-                    alignItems: "center",
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={pickImage}
-                    style={styles.pickerimg}
-                  >
-                    <Text style={{ color: "white", fontWeight: "bold" }}>
-                      Pick an image from camera roll
+            <Formik
+              initialValues={{
+                description: "",
+                foodQuantity: "",
+                location: "",
+                contactNumber: "",
+                Name:''
+              }}
+              onSubmit={(values) =>
+                console.log(values,images)
+              }
+            >
+              {({ handleChange, handleBlur, handleSubmit, values }) => (
+                <View style={styles.container}>
+                  <TextInput
+                    style={styles.input}
+                    onChangeText={handleChange("Name")}
+                    onBlur={handleBlur("Name")}
+                    value={values.Name}
+                    placeholder="Name"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    onChangeText={handleChange("description")}
+                    onBlur={handleBlur("description")}
+                    value={values.description}
+                    placeholder="Food Description"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    onChangeText={handleChange("foodQuantity")}
+                    onBlur={handleBlur("foodQuantity")}
+                    value={values.foodQuantity}
+                    placeholder="Approx Food Quantity"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    onChangeText={handleChange("location")}
+                    onBlur={handleBlur("location")}
+                    value={values.location}
+                    placeholder="Location"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    onChangeText={handleChange("contactNumber")}
+                    onBlur={handleBlur("contactNumber")}
+                    value={values.contactNumber}
+                    placeholder="Contact Number"
+                    keyboardType="phone-pad"
+                  />
+                  <View style={styles.locationContainer}>
+                    <Text style={styles.locationText}>
+                      Latitude: {location ? location.coords.latitude : ""}
                     </Text>
+                    <Text style={styles.locationText}>
+                      Longitude: {location ? location.coords.longitude : ""}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      alignItems: "center",
+                    }}
+                  >
+                    <TouchableOpacity
+                      onPress={pickImage}
+                      style={styles.pickerimg}
+                    >
+                      <Text style={{ color: "white", fontWeight: "bold" }}>
+                        Pick an image from camera roll
+                      </Text>
+                    </TouchableOpacity>
+                    {images.map((image, index) => (
+                      <View key={index}>
+                        <Image
+                          source={{ uri: image }}
+                          style={{ width: 125, height: 125, margin: 10 }}
+                        />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImageFromDirectory(index)}
+                        >
+                          <Text style={styles.removeButtonText}>
+                            Remove Image
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={handleSubmit}
+                  >
+                    <Text style={styles.buttonText}>Donate</Text>
                   </TouchableOpacity>
-                  {images.map((image, index) => (
-                    <View key={index}>
-                      <Image
-                        source={{ uri: image }}
-                        style={{ width: 125, height: 125, margin: 10 }}
-                      />
-                      <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => removeImageFromDirectory(index)}
-                      >
-                        <Text style={styles.removeButtonText}>
-                          Remove Image
-                        </Text>
-                      </TouchableOpacity>
-                      
-                    </View>
-                  ))}
+                  {/* <Button title="Reverse Geocode Current Location" onPress={handleLogout} /> */}
                 </View>
-                <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                  <Text style={styles.buttonText}>Donate</Text>
-                </TouchableOpacity>
-                {/* <Button title="Reverse Geocode Current Location" onPress={handleLogout} /> */}
-
-              </View>
-            )}
-          </Formik>
+              )}
+            </Formik>
           </ImageBackground>
         </Card>
       </ScrollView>
@@ -242,26 +253,24 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    overflow: "hidden", 
-    borderColor:'red',
-    borderWidth:2,
-  
-
+    overflow: "hidden",
+    borderColor: "red",
+    borderWidth: 2,
   },
-  
+
   card2: {
     margin: 20,
-    borderColor:'red',
+    borderColor: "red",
     marginTop: 0,
     marginBottom: 50,
     padding: 15,
-    paddingTop:30,
+    paddingTop: 30,
     borderRadius: 10,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth:2,
+    borderWidth: 2,
   },
   heading: {
     fontSize: 24,
@@ -294,7 +303,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 10,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
-    borderRadius:10,
+    borderRadius: 10,
   },
   button: {
     backgroundColor: "green",

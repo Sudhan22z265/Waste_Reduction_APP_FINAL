@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, Button, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { KindeSDK } from '@kinde-oss/react-native-sdk-0-7x';
 import { useNavigation } from '@react-navigation/native';
+
+
 const Profile = () => {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
   const list = {
     KINDE_ISSUER_URL: 'https://sudhan123.kinde.com',
-    KINDE_POST_CALLBACK_URL: 'exp://192.168.54.4:8081',
-    KINDE_POST_LOGOUT_REDIRECT_URL: 'exp://192.168.54.4:8081',
+    KINDE_POST_CALLBACK_URL: 'exp://192.168.110.4:8081',
+    KINDE_POST_LOGOUT_REDIRECT_URL: 'exp://192.168.110.4:8081',
     KINDE_CLIENT_ID: '06eea6fe24074922ba63b79d9133ce88',
   };
   const client = new KindeSDK(
@@ -30,9 +32,9 @@ const Profile = () => {
   const handleLogout = async () => {
     const loggedOut = await client.logout();
     if (loggedOut) {
-        navigation.navigate('LandingPage'); 
+      navigation.navigate('LandingPage');
     }
-}
+  };
 
   useEffect(() => {
     getProfile();
@@ -40,10 +42,21 @@ const Profile = () => {
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: profile.picture }} style={styles.profileImage} />
-      <Text style={styles.text}>Name: {profile.email}</Text>
-      <Text style={styles.text}>Credit: 0</Text>
-      <Button title="Logout" onPress={handleLogout} />
+      <View style={styles.header}>
+        <Image source={{ uri: profile.picture }} style={styles.profileImage} />
+        <Text style={styles.nameText}>{profile.email}</Text>
+        <View style={styles.logout}>
+        <Text style={styles.creditText}>Credit: 0</Text>
+        </View>
+      </View>
+      <View >
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.buttonText}>History</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Logout</Text>
+      </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -51,18 +64,52 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
     alignItems: 'center',
     justifyContent: 'center',
+
+    height:'70%',
+
+    backgroundColor: '#3498db',
+
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     marginBottom: 20,
   },
-  text: {
-    marginBottom: 10,
+  nameText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
   },
+  creditText: {
+    fontSize: 20,
+    color: '#fff',
+  },
+  body: {
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+  },
+  logoutButton: {
+    backgroundColor: '#e74c3c',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 25,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  logout : {
+    marginTop:40,
+  }
 });
 
 export default Profile;

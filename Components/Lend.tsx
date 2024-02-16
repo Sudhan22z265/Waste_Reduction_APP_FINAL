@@ -25,18 +25,7 @@ const Lend = () => (
             <Button>Ok</Button>
           </Card.Actions>
         </Card>
-        <Card style={styles.card}>
-          <Card.Title title="Card Title" subtitle="Card Subtitle" left={LeftContent} />
-          <Card.Content>
-            <Text variant="titleLarge">Card title</Text>
-            <Text variant="bodyMedium">Card content</Text>
-          </Card.Content>
-          <Card.Cover style={styles.FoodImg} source={require('./../assets/test.webp')} />
-          <Card.Actions>
-            <Button>Cancel</Button>
-            <Button>Ok</Button>
-          </Card.Actions>
-        </Card>
+        
       </View>
     </ScrollView>
   </ImageBackground>
