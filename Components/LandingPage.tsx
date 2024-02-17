@@ -3,18 +3,13 @@ import React from "react";
 import { KindeSDK } from '@kinde-oss/react-native-sdk-0-7x';
 import Home from "./Home";
 import { useNavigation } from '@react-navigation/native';
-
+import {list} from './Auth_kinde.js'
 
 export default function LandingPage() {
   // Inside your component
 const navigation = useNavigation();
 
-  const list = {
-    KINDE_ISSUER_URL:'https://sudhan123.kinde.com',
-KINDE_POST_CALLBACK_URL : 'exp://192.168.110.4:8081',
-KINDE_POST_LOGOUT_REDIRECT_URL : 'exp://192.168.110.4:8081',
-KINDE_CLIENT_ID:'06eea6fe24074922ba63b79d9133ce88',
-};
+  
   const client = new KindeSDK(list.KINDE_ISSUER_URL, list.KINDE_POST_CALLBACK_URL, list.KINDE_CLIENT_ID, list.KINDE_POST_LOGOUT_REDIRECT_URL);
   const handleSignUp = async () => {
     try {
@@ -39,10 +34,10 @@ KINDE_CLIENT_ID:'06eea6fe24074922ba63b79d9133ce88',
     <View style={styles.page}>
       <Image
         style={styles.image}
-        source={require("./../assets/Blog-1-june.jpg")}
+        source={require("./../assets/firstpage2.jpeg")}
       />
       <Text style={styles.welcome}>
-        Welcome to <Text style={styles.title}>Food Rescue Hub</Text>
+        Welcome to <Text style={styles.title}>Waste Reduction App</Text>
       </Text>
       <TouchableOpacity style={styles.loginbutton} onPress={handleSignIn}>
         <Text style={styles.login}>Login</Text>
@@ -86,7 +81,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   page:{
-    backgroundColor:'#FFBFBF',
+    backgroundColor:'#FFFFFF',
     height:'100%'
     
   },

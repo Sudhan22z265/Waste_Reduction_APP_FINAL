@@ -9,21 +9,73 @@ import {
   Button,
   Image,
   ScrollView,
+  Alert,
+  SafeAreaView,
 } from "react-native";
+import Image1 from "./Image_1";
 import { Formik } from "formik";
 import { Card } from "react-native-paper"; // Import Card from react-native-paper
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import * as Location from "expo-location";
 import { KindeSDK } from "@kinde-oss/react-native-sdk-0-7x";
+import { Picker } from "@react-native-picker/picker";
+import axios from "axios";
+import { list } from "./Auth_kinde";
+import { db, firebase } from "../config";
+import { addDoc, collection, doc, setDoc } from "firebase/firestore";
 
 export default function Donate() {
-  const list = {
-    KINDE_ISSUER_URL: "https://sudhan123.kinde.com",
-    KINDE_POST_CALLBACK_URL: "exp://192.168.110.4:8081",
-    KINDE_POST_LOGOUT_REDIRECT_URL: "exp://192.168.110.4:8081",
-    KINDE_CLIENT_ID: "06eea6fe24074922ba63b79d9133ce88",
+  const [image, setImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [imageurl, setImageUrl] = useState("");
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
   };
+
+  const uploadMedia = async () => {
+    setUploading(true);
+  
+    try {
+      const { uri } = await FileSystem.getInfoAsync(image);
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          resolve(xhr.response);
+        };
+        xhr.onerror = (e) => {
+          reject(new TypeError('Network request failed'));
+        };
+        xhr.responseType = 'blob';
+        xhr.open('GET', uri, true);
+        xhr.send(null);
+      });
+      const filename = image.substring(image.lastIndexOf('/') + 1);
+      const ref = firebase.storage().ref().child(filename);
+  
+      await ref.put(blob);
+      setUploading(false);
+      Alert.alert('Photo uploaded!');
+      setImageUrl(filename); // Set the image URL state to the filename
+      setImage(null);
+      return filename; // Return filename when upload is complete
+    } catch (err) {
+      console.error(err);
+      setUploading(false);
+      throw err; // Rethrow error if upload fails
+    }
+  };
+  
+
   const client = new KindeSDK(
     list.KINDE_ISSUER_URL,
     list.KINDE_POST_CALLBACK_URL,
@@ -60,20 +112,6 @@ export default function Donate() {
 
   const [images, setImages] = useState([]);
 
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      saveImageToAppDirectory(result.assets[0].uri);
-      setImages([...images, result.assets[0].uri]);
-    }
-  };
-
   const saveImageToAppDirectory = async (imageUri) => {
     const fileName = imageUri.split("/").pop();
     const appDirectory = FileSystem.documentDirectory + "images/";
@@ -108,18 +146,14 @@ export default function Donate() {
 
   return (
     <ImageBackground
-      source={require("./../assets/bg-food.jpg")}
+      source={require("./../assets/backdonate.jpeg")}
       style={styles.backgroundImage}
     >
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Card style={styles.card1}>
-          <ImageBackground source={require("./../assets/grad.avif")}>
-            <Text style={styles.heading}>Food Donation Platform</Text>
-            <Text style={styles.slogan}>
-              "Be a Food Hero: Donate Today, Transform Lives"
-            </Text>
-          </ImageBackground>
-        </Card>
+        <View style={styles.container}>
+          <Text style={styles.slogan}>Scraps</Text>
+          <Text style={styles.slogan1}>Save.</Text>
+        </View>
         <Card style={styles.card2}>
           <ImageBackground
             source={require("./../assets/grad.avif")}
@@ -131,11 +165,24 @@ export default function Donate() {
                 foodQuantity: "",
                 location: "",
                 contactNumber: "",
-                Name:''
+                Name: "",
+                email : "",
+                latitude : "",
+                longitude: "",
               }}
-              onSubmit={(values) =>
-                console.log(values,images)
-              }
+              onSubmit={async (values) => {
+                values = { ...values, imageurl ,longitude: location.coords.longitude,
+                  latitude: location.coords.latitude,};
+                console.log(values);
+                await addDoc(collection(db, "values"), { values })
+                  .then(() => {
+                    console.log(values);
+                    console.log("saved");
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  });
+              }}
             >
               {({ handleChange, handleBlur, handleSubmit, values }) => (
                 <View style={styles.container}>
@@ -151,15 +198,16 @@ export default function Donate() {
                     onChangeText={handleChange("description")}
                     onBlur={handleBlur("description")}
                     value={values.description}
-                    placeholder="Food Description"
+                    placeholder="Description"
                   />
                   <TextInput
                     style={styles.input}
-                    onChangeText={handleChange("foodQuantity")}
-                    onBlur={handleBlur("foodQuantity")}
-                    value={values.foodQuantity}
-                    placeholder="Approx Food Quantity"
+                    onChangeText={handleChange("email")}
+                    onBlur={handleBlur("email")}
+                    value={values.email}
+                    placeholder="email"
                   />
+
                   <TextInput
                     style={styles.input}
                     onChangeText={handleChange("location")}
@@ -175,6 +223,22 @@ export default function Donate() {
                     placeholder="Contact Number"
                     keyboardType="phone-pad"
                   />
+                  <Picker
+                    selectedValue={values.foodQuantity}
+                    onValueChange={handleChange("foodQuantity")}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Recyclable" value="Recyclable" />
+                    <Picker.Item
+                      label="Non-recyclable"
+                      value="Non-recyclable"
+                    />
+                  </Picker>
+                  <Image
+                    source={require("./../assets/map.png")}
+                    style={{ width: 60, height: 60 }} // Adjust width and height as needed
+                  />
+
                   <View style={styles.locationContainer}>
                     <Text style={styles.locationText}>
                       Latitude: {location ? location.coords.latitude : ""}
@@ -183,42 +247,27 @@ export default function Donate() {
                       Longitude: {location ? location.coords.longitude : ""}
                     </Text>
                   </View>
+                  {/* Image picker */}
                   <View
                     style={{
                       alignItems: "center",
                     }}
                   >
-                    <TouchableOpacity
-                      onPress={pickImage}
-                      style={styles.pickerimg}
-                    >
-                      <Text style={{ color: "white", fontWeight: "bold" }}>
-                        Pick an image from camera roll
-                      </Text>
-                    </TouchableOpacity>
-                    {images.map((image, index) => (
-                      <View key={index}>
-                        <Image
-                          source={{ uri: image }}
-                          style={{ width: 125, height: 125, margin: 10 }}
-                        />
-                        <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() => removeImageFromDirectory(index)}
-                        >
-                          <Text style={styles.removeButtonText}>
-                            Remove Image
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
+                    <SafeAreaView>
+                      <TouchableOpacity style={styles.pickerimg} onPress={pickImage}>
+                        <Text style={{color:'black',fontWeight:'bold'}}>Pick an image from gallery</Text>
+                      </TouchableOpacity>
+                    </SafeAreaView>
                   </View>
                   <TouchableOpacity
                     style={styles.button}
-                    onPress={handleSubmit}
+                    onPress={() => {
+                      uploadMedia().then(handleSubmit);
+                    }}
                   >
                     <Text style={styles.buttonText}>Donate</Text>
                   </TouchableOpacity>
+
                   {/* <Button title="Reverse Geocode Current Location" onPress={handleLogout} /> */}
                 </View>
               )}
@@ -244,24 +293,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
   },
-  card1: {
-    marginTop: 60,
-    margin: 20,
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    borderColor: "red",
-    borderWidth: 2,
-  },
-
   card2: {
     margin: 20,
-    borderColor: "red",
-    marginTop: 0,
+    borderColor: "black",
+    marginTop: 120,
     marginBottom: 50,
     padding: 15,
     paddingTop: 30,
@@ -270,14 +305,14 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    borderWidth: 1,
   },
   heading: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
-    color: "black",
+    color: "#ffffff",
   },
   locationContainer: {
     marginTop: 20,
@@ -289,16 +324,29 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   slogan: {
-    fontSize: 20,
-    fontStyle: "italic",
+    fontSize: 40,
+    marginTop: 90,
+    fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
-    color: "black",
+    color: "#ffffff",
+    textDecorationLine: "line-through",
+    opacity: 0.5,
+  },
+
+  slogan1: {
+    fontSize: 40,
+    marginTop: 0,
+    fontWeight: "bold",
+
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#ffffff",
   },
   input: {
     height: 40,
     width: "100%",
-    borderColor: "red",
+    borderColor: "black",
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
@@ -306,7 +354,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   button: {
-    backgroundColor: "green",
+    backgroundColor: "black",
     padding: 15,
     borderRadius: 15,
     width: "50%",
@@ -316,7 +364,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "900",
     textAlign: "center",
-    fontStyle: "italic",
     fontSize: 20,
   },
   removeButton: {
@@ -330,9 +377,22 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   pickerimg: {
-    backgroundColor: "limegreen",
+    backgroundColor: "#ffffff",
     padding: 10,
     margin: 10,
     borderRadius: 15,
   },
+
+  picker: {
+    height: 40,
+    width: "100%",
+    borderColor: "red",
+    borderWidth: 1,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderRadius: 10,
+    color: "black", // Add this line to set text color
+  },
+  
 });

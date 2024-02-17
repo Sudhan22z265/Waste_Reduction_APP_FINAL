@@ -8,16 +8,11 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import Donate from './Donate'
 import Lend from "./Lend";
+import {list} from './Auth_kinde'
 import Profile from "./Profile";
 export default function Home() {
   const [auth, setAuth] = useState(false);
-  //login
-  const list = {
-    KINDE_ISSUER_URL: "https://sudhan123.kinde.com",
-    KINDE_POST_CALLBACK_URL: "exp://192.168.110.4:8081",
-    KINDE_POST_LOGOUT_REDIRECT_URL: "exp://192.168.110.4:8081",
-    KINDE_CLIENT_ID: "06eea6fe24074922ba63b79d9133ce88",
-  };
+ 
   const client = new KindeSDK(
     list.KINDE_ISSUER_URL,
     list.KINDE_POST_CALLBACK_URL,
